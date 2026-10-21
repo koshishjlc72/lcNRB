@@ -1,0 +1,26 @@
+---
+title: "Caching and automated updates"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Caching and automated updates}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+`lcNRB` stores each distinct workbook under its SHA-256 hash. A dry run compares
+the live content without modifying the cache.
+
+```{r, eval=FALSE}
+library(lcNRB)
+lc_update(dry_run = TRUE)
+report <- lc_update()
+lc_cache_info()
+```
+
+The repository workflow runs this process weekly, validates changed files, and
+opens (but never merges) a pull request only when tracked data artifacts change.
+The workflow needs `contents: write` and `pull-requests: write` permissions.

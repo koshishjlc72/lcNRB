@@ -1,0 +1,39 @@
+---
+title: "Macroeconomic data workflows"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Macroeconomic data workflows}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+The dataset IDs retrieve all verified series from their respective workbook.
+
+```{r, eval=FALSE}
+library(lcNRB)
+
+prices <- lc_get("cpi")
+money <- lc_get("monetary_survey")
+external <- lc_get("balance_of_payments")
+output <- lc_get("gdp_quarterly")
+```
+
+Every result uses the same long-form columns, so provenance can be retained
+through an analysis.
+
+```{r, eval=FALSE}
+remittances <- lc_get("bop_workers_remittances")
+remittances[c("period", "value", "unit", "vintage", "source_url")]
+
+gdp_total <- subset(
+  output,
+  indicator_id == "gdp_total_unadjusted_level"
+)
+```
+
+BOP observations are cumulative within a Nepalese fiscal year; they must not be
+treated as independent monthly flows without an explicit transformation.

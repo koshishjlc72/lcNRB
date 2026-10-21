@@ -1,0 +1,37 @@
+---
+title: "Getting started with lcNRB"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting started with lcNRB}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+`lcNRB` separates live discovery from verified data access. The catalog marks
+the small set of workbooks for which extraction rules have been audited.
+
+```{r, eval=FALSE}
+library(lcNRB)
+lc_catalog()
+lc_search("inflation")
+lc_search("broad money")
+```
+
+The first retrieval downloads an official workbook into a user-level cache.
+
+```{r, eval=FALSE}
+m2 <- lc_get("money_m2")
+subset(m2, date >= as.Date("2020-01-01"))
+lc_metadata("money_m2")
+```
+
+Fiscal series whose dates cannot be mapped exactly retain their source period.
+
+```{r, eval=FALSE}
+cpi <- lc_get("cpi")
+subset(cpi, period >= "2015/16" & indicator_id == "cpi_overall_index")
+```

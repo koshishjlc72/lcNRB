@@ -1,0 +1,31 @@
+Package: lcNRB
+Title: Reproducible Access to Nepalese Macroeconomic Data
+Version: 0.1.0
+Authors@R:
+    person("LC", "Package Authors", , "lcNRB@users.noreply.github.com",
+           role = c("aut", "cre"))
+Description: Provides reproducible, automated access to macroeconomic data
+    published by Nepal Rastra Bank. The package discovers official source
+    workbooks, preserves source vintages in a local cache, parses verified
+    workbook layouts, validates standardized long-form observations, and
+    retains source provenance. This independent package is not affiliated
+    with or endorsed by Nepal Rastra Bank.
+License: MIT + file LICENSE
+Depends: R (>= 4.1.0)
+Imports:
+    curl,
+    digest,
+    dplyr,
+    readxl,
+    stringr,
+    tibble,
+    xml2
+Suggests:
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0)
+VignetteBuilder: knitr
+Config/testthat/edition: 3
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3

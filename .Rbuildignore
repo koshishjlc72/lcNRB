@@ -1,0 +1,7 @@
+^\.github$
+^AGENTS\.md$
+^\.source-audit$
+^.*\.Rproj$
+^\.Rproj\.user$
+^LICENSE\.md$
+^data-raw$

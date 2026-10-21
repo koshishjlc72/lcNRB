@@ -1,0 +1,22 @@
+indicator_id,dataset_id,indicator_name,description,synonyms,sector,frequency,unit
+cpi_overall_index,cpi,National CPI overall index,Annual national consumer price index overall,index;consumer prices;cost of living;CPI,real,annual,index
+cpi_food_index,cpi,National CPI food and beverages index,Annual food and beverages CPI,food prices;food CPI,real,annual,index
+cpi_nonfood_index,cpi,National CPI non-food and services index,Annual non-food and services CPI,services prices;nonfood CPI,real,annual,index
+inflation_overall_yoy,cpi,National inflation rate,Annual percentage change in overall CPI,inflation;CPI change;price growth,real,annual,percent
+inflation_food_yoy,cpi,Food inflation rate,Annual percentage change in food and beverages CPI,food inflation,real,annual,percent
+inflation_nonfood_yoy,cpi,Non-food and services inflation rate,Annual percentage change in non-food and services CPI,nonfood inflation;services inflation,real,annual,percent
+money_m1,monetary_survey,Narrow money M1,Monthly monetary aggregate M1,narrow money;money supply,financial,monthly,NPR million
+money_m1_yoy,monetary_survey,Narrow money M1 growth,Year-on-year growth of M1,M1 growth,financial,monthly,percent
+money_m2,monetary_survey,Broad money M2,Monthly monetary aggregate M2,broad money;money supply,financial,monthly,NPR million
+money_m2_yoy,monetary_survey,Broad money M2 growth,Year-on-year growth of M2,M2 growth,financial,monthly,percent
+private_sector_credit,monetary_survey,Private sector credit,Monthly credit to the private sector,domestic credit;private credit,financial,monthly,NPR million
+private_sector_credit_yoy,monetary_survey,Private sector credit growth,Year-on-year private sector credit growth,credit growth,financial,monthly,percent
+bfi_deposits,monetary_survey,BFI deposits,Deposits of banks and financial institutions,bank deposits;deposits,financial,monthly,NPR million
+bfi_deposits_yoy,monetary_survey,BFI deposit growth,Year-on-year growth of BFI deposits,deposit growth,financial,monthly,percent
+bop_current_account,balance_of_payments,Current account,Cumulative current-account balance,current account;BOP,external,monthly cumulative,NPR million
+bop_goods_exports_fob,balance_of_payments,Goods exports f.o.b.,Cumulative goods exports,merchandise exports;exports,external,monthly cumulative,NPR million
+bop_goods_imports_fob,balance_of_payments,Goods imports f.o.b.,Cumulative goods imports,merchandise imports;imports,external,monthly cumulative,NPR million
+bop_balance_on_goods,balance_of_payments,Balance on goods,Cumulative merchandise trade balance,trade balance,external,monthly cumulative,NPR million
+bop_services_net,balance_of_payments,Services net,Cumulative net services balance,services balance,external,monthly cumulative,NPR million
+bop_workers_remittances,balance_of_payments,Workers' remittances,Cumulative workers' remittances,remittance inflows;remittances,external,monthly cumulative,NPR million
+bop_reserve_assets,balance_of_payments,Reserve assets,Cumulative reserve-assets transaction line,foreign reserves;reserves,external,monthly cumulative,NPR million
