@@ -1,6 +1,6 @@
 # NRB source audit
 
-Audit date: **2026-10-20 (Asia/Katmandu)**
+Audit date: **2026-10-21 (Asia/Katmandu)**
 
 Official entry point: <https://www.nrb.org.np/database-on-nepalese-economy/>
 

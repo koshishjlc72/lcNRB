@@ -2,8 +2,10 @@ Package: lcNRB
 Title: Reproducible Access to Nepalese Macroeconomic Data
 Version: 0.1.0
 Authors@R:
-    person("LC", "Package Authors", , "lcNRB@users.noreply.github.com",
-           role = c("aut", "cre"))
+    person("Koshish Jung", "Lamichhane",
+           email = "Koshishl.c@gmail.com",
+           role = c("aut", "cre"),
+           comment = c(ORCID = "0009-0002-5455-5741"))
 Description: Provides reproducible, automated access to macroeconomic data
     published by Nepal Rastra Bank. The package discovers official source
     workbooks, preserves source vintages in a local cache, parses verified
