@@ -32,3 +32,40 @@ test_that("live discovery is opt-in", {
   expect_true(nrow(x) >= 90)
   expect_true(all(grepl("^https://([^/]+\\.)?nrb\\.org\\.np/", x$source_url)))
 })
+
+test_that("registered sources resolve by exact title, sector, and frequency", {
+  fixture <- testthat::test_path("fixtures", "source-resolution-page.html")
+  discovered <- lcNRB:::lc_parse_discovery_document(
+    xml2::read_html(fixture), "real",
+    "https://www.nrb.org.np/database-on-nepalese-economy/real-sector/"
+  )
+  matched <- lcNRB:::lc_match_discovered_sources(
+    discovered, c("cpi", "gdp_quarterly")
+  )
+  expect_setequal(matched$dataset_id, c("cpi", "gdp_quarterly"))
+  expect_match(matched$source_url[matched$dataset_id == "cpi"], "2027/01/CPI.xlsx$")
+  expect_match(
+    matched$source_url[matched$dataset_id == "gdp_quarterly"],
+    "2027/01/Quarterly-GDP-New.xlsx$"
+  )
+})
+
+test_that("registered source resolution rejects missing or ambiguous matches", {
+  fixture <- testthat::test_path("fixtures", "source-resolution-page.html")
+  discovered <- lcNRB:::lc_parse_discovery_document(
+    xml2::read_html(fixture), "real",
+    "https://www.nrb.org.np/database-on-nepalese-economy/real-sector/"
+  )
+  expect_error(
+    lcNRB:::lc_match_discovered_sources(discovered[0, ], "cpi"),
+    "found 0"
+  )
+  duplicate <- dplyr::bind_rows(
+    discovered,
+    discovered[discovered$title == "Consumer price index", ]
+  )
+  expect_error(
+    lcNRB:::lc_match_discovered_sources(duplicate, "cpi"),
+    "found 2"
+  )
+})

@@ -16,7 +16,9 @@ lc_catalog <- function(sector = NULL, frequency = NULL, refresh = FALSE) {
 
   if (isTRUE(refresh)) {
     live <- lc_discover()
-    known <- live$source_url %in% out$source_url
+    current <- lc_match_discovered_sources(live, out$dataset_id[out$supported])
+    out$source_url[match(current$dataset_id, out$dataset_id)] <- current$source_url
+    known <- live$source_url %in% current$source_url
     extra <- live[!known, , drop = FALSE]
     if (nrow(extra)) {
       extra$supported <- FALSE

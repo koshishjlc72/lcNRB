@@ -19,4 +19,6 @@ The normalized local path, invisibly carrying retrieval metadata.
 \description{
 Without \code{dest}, the file is stored as a content-addressed vintage in the
 user cache. Existing cached content is reused unless \code{overwrite = TRUE}.
+When a download is needed, the registered source title is resolved on the
+official NRB database page so that newly dated workbook URLs are detected.
 }

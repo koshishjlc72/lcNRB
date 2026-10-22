@@ -23,7 +23,7 @@ lc_http_download <- function(url, dest, attempts = 3L) {
   lc_assert_trusted_url(url)
   handle <- curl::new_handle(
     useragent = paste0(
-      "lcNRB/0.1.0 (+https://github.com/YOUR_USERNAME/lcNRB; ",
+      "lcNRB/0.1.0 (+https://github.com/koshishjlc72/lcNRB; ",
       "macroeconomic research client)"
     ),
     connecttimeout = 20,
@@ -86,6 +86,48 @@ lc_discover_page <- function(sector, page_url) {
   lc_http_download(page_url, tmp)
   doc <- xml2::read_html(tmp)
   lc_parse_discovery_document(doc, sector, page_url)
+}
+
+lc_match_discovered_sources <- function(discovered, dataset_ids) {
+  reg <- lc_dataset_registry()
+  reg <- reg[match(dataset_ids, reg$dataset_id), , drop = FALSE]
+  if (anyNA(reg$dataset_id)) lc_stop("Cannot resolve unknown registered datasets.")
+
+  matches <- lapply(seq_len(nrow(reg)), function(i) {
+    hit <- discovered[
+      tolower(discovered$title) == tolower(reg$discovery_title[[i]]) &
+        tolower(discovered$sector) == tolower(reg$sector[[i]]) &
+        tolower(discovered$frequency) == tolower(reg$discovery_frequency[[i]]),
+      , drop = FALSE
+    ]
+    if (nrow(hit) != 1L) {
+      lc_stop(
+        "Expected exactly one live source for `%s` (%s / %s / %s); found %d.",
+        reg$dataset_id[[i]], reg$discovery_title[[i]], reg$sector[[i]],
+        reg$discovery_frequency[[i]], nrow(hit)
+      )
+    }
+    tibble::tibble(
+      dataset_id = reg$dataset_id[[i]],
+      source_url = hit$source_url[[1L]],
+      discovered_at = hit$discovered_at[[1L]]
+    )
+  })
+  dplyr::bind_rows(matches)
+}
+
+lc_discover_registered_sources <- function(dataset_ids) {
+  dataset_ids <- unique(dataset_ids)
+  reg <- lc_dataset_registry()
+  reg <- reg[reg$dataset_id %in% dataset_ids, , drop = FALSE]
+  if (nrow(reg) != length(dataset_ids)) {
+    lc_stop("One or more requested datasets are not registered.")
+  }
+  pages <- unique(reg[, c("sector", "source_page"), drop = FALSE])
+  discovered <- lapply(seq_len(nrow(pages)), function(i) {
+    lc_discover_page(pages$sector[[i]], pages$source_page[[i]])
+  })
+  lc_match_discovered_sources(dplyr::bind_rows(discovered), dataset_ids)
 }
 
 #' Discover workbooks on the official NRB database pages

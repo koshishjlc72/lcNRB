@@ -33,7 +33,11 @@ lc_store_processed <- function(dataset_id, path, data) {
 lc_process_dataset <- function(dataset_id, path) {
   row <- lc_dataset_row(dataset_id)
   parser <- lc_parser_for(row$parser[[1L]])
-  out <- parser(path, source_url = row$source_url[[1L]])
+  source_url <- attr(path, "source_url", exact = TRUE)
+  if (is.null(source_url) || is.na(source_url) || !nzchar(source_url)) {
+    source_url <- row$source_url[[1L]]
+  }
+  out <- parser(path, source_url = source_url)
   lc_validate(out)
   lc_store_processed(dataset_id, path, out)
   out
@@ -45,7 +49,10 @@ lc_cached_dataset <- function(dataset_id) {
   if (!identical(latest$parser_version[[1L]], lc_parser_version_for(dataset_id))) {
     raw <- lc_latest_manifest(dataset_id, require_processed = FALSE)
     if (is.null(raw)) return(NULL)
-    return(lc_process_dataset(dataset_id, raw$raw_path[[1L]]))
+    path <- raw$raw_path[[1L]]
+    attr(path, "retrieved_at") <- raw$retrieved_at[[1L]]
+    attr(path, "source_url") <- raw$source_url[[1L]]
+    return(lc_process_dataset(dataset_id, path))
   }
   readRDS(latest$processed_path[[1L]])
 }

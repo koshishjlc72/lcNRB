@@ -10,6 +10,8 @@ Description: Provides reproducible, automated access to macroeconomic data
     workbook layouts, validates standardized long-form observations, and
     retains source provenance. This independent package is not affiliated
     with or endorsed by Nepal Rastra Bank.
+URL: https://github.com/koshishjlc72/lcNRB
+BugReports: https://github.com/koshishjlc72/lcNRB/issues
 License: MIT + file LICENSE
 Depends: R (>= 4.1.0)
 Imports:
