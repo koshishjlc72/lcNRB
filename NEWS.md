@@ -7,3 +7,6 @@
   labels, parser versions, and source notes with every observation.
 * Adds content-addressed caching, source discovery, validation, and vintage
   update checks.
+* Adds a scheduled, content-addressed GitHub data mirror. Mirror workbooks are
+  accepted only after SHA-256 verification and the same local parser checks;
+  direct NRB downloads remain available with `source = "nrb"`.

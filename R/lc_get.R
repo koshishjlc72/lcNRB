@@ -70,13 +70,14 @@ lc_parse_date_arg <- function(x, name) {
 #'
 #' `indicator` may be a dataset ID (returning every parsed indicator in that
 #' dataset) or an indicator ID from [lc_search()]. The first use downloads and
-#' caches the official workbook; later uses work from that local vintage.
+#' caches a hash-verified copy of the official workbook from the validated
+#' mirror; later uses work from that local vintage.
 #'
 #' @param indicator Dataset or indicator ID.
 #' @param start,end Optional ISO dates or `Date` values. Date filtering is only
 #'   available for series with validated Gregorian dates.
 #' @param frequency Optional exact frequency filter.
-#' @param refresh If `TRUE`, check the official workbook for a new vintage.
+#' @param refresh If `TRUE`, check the validated mirror for a new vintage.
 #' @return A standardized long-form tibble.
 #' @export
 lc_get <- function(indicator, start = NULL, end = NULL, frequency = NULL,

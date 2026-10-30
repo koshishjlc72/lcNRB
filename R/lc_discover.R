@@ -19,8 +19,8 @@ lc_assert_trusted_url <- function(url) {
   invisible(TRUE)
 }
 
-lc_http_download <- function(url, dest, attempts = 3L) {
-  lc_assert_trusted_url(url)
+lc_http_fetch <- function(url, dest, assert_url, attempts = 3L) {
+  assert_url(url)
   handle <- curl::new_handle(
     useragent = paste0(
       "lcNRB/0.1.0 (+https://github.com/koshishjlc72/lcNRB; ",
@@ -44,6 +44,10 @@ lc_http_download <- function(url, dest, attempts = 3L) {
     if (i < attempts) Sys.sleep(i)
   }
   lc_stop("Failed to download `%s` after %d attempts: %s", url, attempts, last$message)
+}
+
+lc_http_download <- function(url, dest, attempts = 3L) {
+  lc_http_fetch(url, dest, lc_assert_trusted_url, attempts = attempts)
 }
 
 lc_parse_discovery_document <- function(doc, sector, page_url) {

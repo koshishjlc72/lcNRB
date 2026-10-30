@@ -7,11 +7,12 @@ Authors@R:
            role = c("aut", "cre"),
            comment = c(ORCID = "0009-0002-5455-5741"))
 Description: Provides reproducible, automated access to macroeconomic data
-    published by Nepal Rastra Bank. The package discovers official source
-    workbooks, preserves source vintages in a local cache, parses verified
-    workbook layouts, validates standardized long-form observations, and
-    retains source provenance. This independent package is not affiliated
-    with or endorsed by Nepal Rastra Bank.
+    published by Nepal Rastra Bank. The package retrieves validated copies of
+    official source workbooks from a scheduled GitHub mirror, preserves source
+    vintages in a local cache, parses verified workbook layouts, validates
+    standardized long-form observations, and retains the original source
+    provenance. This independent package is not affiliated with or endorsed
+    by Nepal Rastra Bank.
 URL: https://github.com/koshishjlc72/lcNRB
 BugReports: https://github.com/koshishjlc72/lcNRB/issues
 License: MIT + file LICENSE

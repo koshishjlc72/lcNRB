@@ -4,7 +4,12 @@
 \alias{lc_download}
 \title{Download an original NRB source file}
 \usage{
-lc_download(dataset_id, dest = NULL, overwrite = FALSE)
+lc_download(
+  dataset_id,
+  dest = NULL,
+  overwrite = FALSE,
+  source = getOption("lcNRB.source", "mirror")
+)
 }
 \arguments{
 \item{dataset_id}{A supported dataset ID from \code{\link[=lc_catalog]{lc_catalog()}}.}
@@ -12,6 +17,8 @@ lc_download(dataset_id, dest = NULL, overwrite = FALSE)
 \item{dest}{Optional destination file path.}
 
 \item{overwrite}{Whether to replace \code{dest} or re-check an existing cache.}
+
+\item{source}{Download route: \code{"mirror"} (the default) or \code{"nrb"}.}
 }
 \value{
 The normalized local path, invisibly carrying retrieval metadata.
@@ -19,6 +26,7 @@ The normalized local path, invisibly carrying retrieval metadata.
 \description{
 Without \code{dest}, the file is stored as a content-addressed vintage in the
 user cache. Existing cached content is reused unless \code{overwrite = TRUE}.
-When a download is needed, the registered source title is resolved on the
-official NRB database page so that newly dated workbook URLs are detected.
+By default, downloads use the package's validated GitHub mirror. Set
+\code{source = "nrb"} to resolve and download directly from the official NRB
+database page. Both routes preserve the original NRB URL and content hash.
 }

@@ -4,13 +4,20 @@
 \alias{lc_update}
 \title{Check for and cache updated NRB source vintages}
 \usage{
-lc_update(dataset_ids = NULL, dry_run = FALSE)
+lc_update(
+  dataset_ids = NULL,
+  dry_run = FALSE,
+  source = getOption("lcNRB.source", "mirror")
+)
 }
 \arguments{
 \item{dataset_ids}{Optional character vector of supported dataset IDs.}
 
 \item{dry_run}{If \code{TRUE}, download to temporary files and report content
 changes without modifying the cache.}
+
+\item{source}{Update route: \code{"mirror"} (the default) or \code{"nrb"}. The
+direct NRB route is used by the scheduled mirror publisher.}
 }
 \value{
 A tibble reporting source status and parsed changes.

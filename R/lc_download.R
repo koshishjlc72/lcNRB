@@ -13,6 +13,61 @@ lc_validate_download <- function(path, expected_type) {
   invisible(TRUE)
 }
 
+lc_store_raw_download <- function(dataset_id, path, source_url,
+                                  retrieved_at = lc_now_utc(),
+                                  expected_hash = NULL,
+                                  mirror_url = NA_character_,
+                                  mirror_validated_at = NA_character_) {
+  row <- lc_dataset_row(dataset_id)
+  lc_validate_download(path, row$file_type[[1L]])
+  hash <- digest::digest(file = path, algo = "sha256")
+  if (!is.null(expected_hash) && !identical(tolower(hash), tolower(expected_hash))) {
+    lc_stop(
+      "Mirror hash mismatch for `%s`: expected %s but downloaded %s.",
+      dataset_id, expected_hash, hash
+    )
+  }
+
+  paths <- lc_ensure_cache()
+  raw_dir <- file.path(paths$raw, dataset_id, hash)
+  dir.create(raw_dir, recursive = TRUE, showWarnings = FALSE)
+  target <- file.path(raw_dir, paste0(dataset_id, ".", row$file_type[[1L]]))
+  if (!file.exists(target) && !file.copy(path, target)) {
+    lc_stop("Failed to store the downloaded `%s` workbook.", dataset_id)
+  }
+  target <- normalizePath(target, winslash = "/", mustWork = TRUE)
+
+  man <- lc_read_manifest()
+  hit <- man$dataset_id == dataset_id & man$sha256 == hash
+  if (!any(hit)) {
+    man <- dplyr::bind_rows(man, tibble::tibble(
+      dataset_id = dataset_id,
+      source_url = source_url,
+      retrieved_at = retrieved_at,
+      sha256 = hash,
+      parser_version = NA_character_,
+      parsing_status = "downloaded",
+      raw_path = target,
+      processed_path = NA_character_,
+      source_modified = NA_character_,
+      mirror_url = mirror_url,
+      mirror_validated_at = mirror_validated_at
+    ))
+  } else {
+    man$source_url[hit] <- source_url
+    man$retrieved_at[hit] <- retrieved_at
+    man$raw_path[hit] <- target
+    man$mirror_url[hit] <- mirror_url
+    man$mirror_validated_at[hit] <- mirror_validated_at
+  }
+  lc_write_manifest(man)
+
+  attr(target, "retrieved_at") <- retrieved_at
+  attr(target, "source_url") <- source_url
+  attr(target, "mirror_url") <- mirror_url
+  target
+}
+
 lc_download_from_url <- function(dataset_id, source_url, dest = NULL,
                                  overwrite = FALSE) {
   row <- lc_dataset_row(dataset_id)
@@ -39,55 +94,33 @@ lc_download_from_url <- function(dataset_id, source_url, dest = NULL,
   tmp <- tempfile(tmpdir = paths$root, fileext = paste0(".", type))
   on.exit(unlink(tmp), add = TRUE)
   lc_http_download(url, tmp)
-  lc_validate_download(tmp, type)
   hash <- digest::digest(file = tmp, algo = "sha256")
-  raw_dir <- file.path(paths$raw, dataset_id, hash)
-  dir.create(raw_dir, recursive = TRUE, showWarnings = FALSE)
-  target <- file.path(raw_dir, paste0(dataset_id, ".", type))
-  if (!file.exists(target)) file.copy(tmp, target)
-  retrieved <- lc_now_utc()
-
-  man <- lc_read_manifest()
-  if (!any(man$dataset_id == dataset_id & man$sha256 == hash)) {
-    man <- dplyr::bind_rows(man, tibble::tibble(
-      dataset_id = dataset_id,
-      source_url = url,
-      retrieved_at = retrieved,
-      sha256 = hash,
-      parser_version = NA_character_,
-      parsing_status = "downloaded",
-      raw_path = normalizePath(target, winslash = "/", mustWork = TRUE),
-      processed_path = NA_character_,
-      source_modified = NA_character_
-    ))
-    lc_write_manifest(man)
-  } else {
-    hit <- man$dataset_id == dataset_id & man$sha256 == hash
-    retrieved <- man$retrieved_at[hit][[1L]]
-    man$source_url[hit] <- url
-    man$raw_path[hit] <- normalizePath(target, winslash = "/", mustWork = TRUE)
-    lc_write_manifest(man)
-  }
-  target <- normalizePath(target, winslash = "/", mustWork = TRUE)
-  attr(target, "retrieved_at") <- retrieved
-  attr(target, "source_url") <- url
-  target
+  old <- lc_read_manifest()
+  hit <- old$dataset_id == dataset_id & old$sha256 == hash
+  retrieved <- if (any(hit)) old$retrieved_at[hit][[1L]] else lc_now_utc()
+  lc_store_raw_download(
+    dataset_id, tmp, source_url = url, retrieved_at = retrieved
+  )
 }
 
 #' Download an original NRB source file
 #'
 #' Without `dest`, the file is stored as a content-addressed vintage in the
 #' user cache. Existing cached content is reused unless `overwrite = TRUE`.
-#' When a download is needed, the registered source title is resolved on the
-#' official NRB database page so that newly dated workbook URLs are detected.
+#' By default, downloads use the package's validated GitHub mirror. Set
+#' `source = "nrb"` to resolve and download directly from the official NRB
+#' database page. Both routes preserve the original NRB URL and content hash.
 #'
 #' @param dataset_id A supported dataset ID from [lc_catalog()].
 #' @param dest Optional destination file path.
 #' @param overwrite Whether to replace `dest` or re-check an existing cache.
+#' @param source Download route: `"mirror"` (the default) or `"nrb"`.
 #' @return The normalized local path, invisibly carrying retrieval metadata.
 #' @export
-lc_download <- function(dataset_id, dest = NULL, overwrite = FALSE) {
+lc_download <- function(dataset_id, dest = NULL, overwrite = FALSE,
+                        source = getOption("lcNRB.source", "mirror")) {
   lc_assert_scalar_string(dataset_id, "dataset_id")
+  source <- lc_source_mode(source)
   row <- lc_dataset_row(dataset_id)
   if (!isTRUE(row$supported[[1L]])) {
     lc_stop("Dataset `%s` has no verified parser.", dataset_id)
@@ -101,6 +134,12 @@ lc_download <- function(dataset_id, dest = NULL, overwrite = FALSE) {
       attr(path, "source_url") <- latest$source_url[[1L]]
       return(path)
     }
+  }
+
+  if (identical(source, "mirror")) {
+    return(lc_download_from_mirror(
+      dataset_id, dest = dest, overwrite = overwrite
+    ))
   }
 
   current <- lc_discover_registered_sources(dataset_id)

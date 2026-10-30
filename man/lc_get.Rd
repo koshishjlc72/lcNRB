@@ -14,7 +14,7 @@ available for series with validated Gregorian dates.}
 
 \item{frequency}{Optional exact frequency filter.}
 
-\item{refresh}{If \code{TRUE}, check the official workbook for a new vintage.}
+\item{refresh}{If \code{TRUE}, check the validated mirror for a new vintage.}
 }
 \value{
 A standardized long-form tibble.
@@ -22,5 +22,6 @@ A standardized long-form tibble.
 \description{
 \code{indicator} may be a dataset ID (returning every parsed indicator in that
 dataset) or an indicator ID from \code{\link[=lc_search]{lc_search()}}. The first use downloads and
-caches the official workbook; later uses work from that local vintage.
+caches a hash-verified copy of the official workbook from the validated
+mirror; later uses work from that local vintage.
 }

@@ -24,7 +24,8 @@ lc_empty_manifest <- function() {
   tibble::tibble(
     dataset_id = character(), source_url = character(), retrieved_at = character(),
     sha256 = character(), parser_version = character(), parsing_status = character(),
-    raw_path = character(), processed_path = character(), source_modified = character()
+    raw_path = character(), processed_path = character(), source_modified = character(),
+    mirror_url = character(), mirror_validated_at = character()
   )
 }
 

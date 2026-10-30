@@ -7,6 +7,22 @@ lc_remote_hash <- function(dataset_id, source_url) {
   digest::digest(file = tmp, algo = "sha256")
 }
 
+lc_mirror_remote_hash <- function(row) {
+  tmp <- tempfile(fileext = paste0(".", row$file_type[[1L]]))
+  on.exit(unlink(tmp), add = TRUE)
+  url <- lc_mirror_asset_url(row)
+  lc_http_mirror_download(url, tmp)
+  lc_validate_download(tmp, row$file_type[[1L]])
+  hash <- digest::digest(file = tmp, algo = "sha256")
+  if (!identical(tolower(hash), tolower(row$sha256[[1L]]))) {
+    lc_stop(
+      "Mirror hash mismatch for `%s`: expected %s but downloaded %s.",
+      row$dataset_id[[1L]], row$sha256[[1L]], hash
+    )
+  }
+  hash
+}
+
 lc_compare_vintages <- function(old, new) {
   if (is.null(old) || !nrow(old)) {
     return(list(new_observations = nrow(new), revised_observations = 0L))
@@ -29,9 +45,13 @@ lc_compare_vintages <- function(old, new) {
 #' @param dataset_ids Optional character vector of supported dataset IDs.
 #' @param dry_run If `TRUE`, download to temporary files and report content
 #'   changes without modifying the cache.
+#' @param source Update route: `"mirror"` (the default) or `"nrb"`. The
+#'   direct NRB route is used by the scheduled mirror publisher.
 #' @return A tibble reporting source status and parsed changes.
 #' @export
-lc_update <- function(dataset_ids = NULL, dry_run = FALSE) {
+lc_update <- function(dataset_ids = NULL, dry_run = FALSE,
+                      source = getOption("lcNRB.source", "mirror")) {
+  source <- lc_source_mode(source)
   reg <- lc_dataset_registry()
   if (is.null(dataset_ids)) dataset_ids <- reg$dataset_id[reg$supported]
   if (!is.character(dataset_ids) || !length(dataset_ids) || anyNA(dataset_ids)) {
@@ -40,7 +60,11 @@ lc_update <- function(dataset_ids = NULL, dry_run = FALSE) {
   unknown <- setdiff(dataset_ids, reg$dataset_id[reg$supported])
   if (length(unknown)) lc_stop("Unknown or unsupported dataset IDs: %s", paste(unknown, collapse = ", "))
 
-  current <- lc_discover_registered_sources(dataset_ids)
+  current <- if (identical(source, "mirror")) {
+    lc_current_mirror_sources(dataset_ids)
+  } else {
+    lc_discover_registered_sources(dataset_ids)
+  }
   results <- vector("list", length(dataset_ids))
   for (i in seq_along(dataset_ids)) {
     id <- dataset_ids[[i]]
@@ -49,21 +73,29 @@ lc_update <- function(dataset_ids = NULL, dry_run = FALSE) {
     before_data <- lc_cached_dataset(id)
     old_hash <- if (is.null(before_raw)) NA_character_ else before_raw$sha256[[1L]]
     if (isTRUE(dry_run)) {
-      new_hash <- lc_remote_hash(id, source_url)
+      new_hash <- if (identical(source, "mirror")) {
+        lc_mirror_remote_hash(current[current$dataset_id == id, , drop = FALSE])
+      } else {
+        lc_remote_hash(id, source_url)
+      }
       status <- if (is.na(old_hash)) "new" else if (identical(old_hash, new_hash)) "unchanged" else "changed"
       results[[i]] <- tibble::tibble(
-        dataset_id = id, status = status, sha256 = new_hash,
+        dataset_id = id, source = source, status = status, sha256 = new_hash,
         new_observations = NA_integer_, revised_observations = NA_integer_
       )
       next
     }
-    path <- lc_download_from_url(id, source_url, overwrite = TRUE)
+    path <- if (identical(source, "mirror")) {
+      lc_download_from_mirror(id, overwrite = TRUE, manifest = current)
+    } else {
+      lc_download_from_url(id, source_url, overwrite = TRUE)
+    }
     new_hash <- digest::digest(file = path, algo = "sha256")
     before_parser <- if (is.null(before_raw)) NA_character_ else before_raw$parser_version[[1L]]
     parser_current <- identical(before_parser, lc_parser_version_for(id))
     if (!is.na(old_hash) && identical(old_hash, new_hash) && !is.null(before_data) && parser_current) {
       results[[i]] <- tibble::tibble(
-        dataset_id = id, status = "unchanged", sha256 = new_hash,
+        dataset_id = id, source = source, status = "unchanged", sha256 = new_hash,
         new_observations = 0L, revised_observations = 0L
       )
       next
@@ -81,6 +113,7 @@ lc_update <- function(dataset_ids = NULL, dry_run = FALSE) {
     delta <- lc_compare_vintages(before_data, parsed)
     results[[i]] <- tibble::tibble(
       dataset_id = id,
+      source = source,
       status = if (is.na(old_hash)) "new" else "updated",
       sha256 = new_hash,
       new_observations = delta$new_observations,

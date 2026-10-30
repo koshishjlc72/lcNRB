@@ -1,16 +1,17 @@
 # lcNRB
 
 `lcNRB` is an independent R package for reproducible access to macroeconomic
-data published by [Nepal Rastra Bank (NRB)](https://www.nrb.org.np/database-on-nepalese-economy/).
-It discovers official workbooks, stores immutable source vintages in a user
-cache, applies dataset-specific parsers, and returns traceable long-form time
-series. It is not affiliated with or endorsed by Nepal Rastra Bank.
+data published by Nepal Rastra Bank (NRB).
+It retrieves validated copies of official workbooks from a scheduled GitHub
+mirror, stores immutable source vintages in a user cache, applies
+dataset-specific parsers, and returns traceable long-form time series. The
+original NRB URL and content hash remain attached to every observation. It is
+not affiliated with or endorsed by Nepal Rastra Bank.
 
 ## Installation
 
 ```r
-# Replace YOUR_USERNAME with the repository owner.
-pak::pak("YOUR_USERNAME/lcNRB")
+pak::pak("koshishjlc72/lcNRB")
 ```
 
 ## Quick start
@@ -33,8 +34,9 @@ m2 <- lc_get("money_m2", start = "2015-01-01", end = "2026-01-01")
 lc_metadata("money_m2")
 ```
 
-The first request downloads the current official workbook. Subsequent calls
-use the local cache. `refresh = TRUE` checks for a new content hash.
+The first request downloads the current validated workbook from the GitHub
+data mirror. Subsequent calls use the local cache. `refresh = TRUE` checks the
+mirror for a new content hash.
 
 ## Verified coverage
 
@@ -78,17 +80,31 @@ raw <- lc_read_raw("cpi", sheet = "CPI_National")
 lc_update(dry_run = TRUE)
 lc_update()
 lc_cache_info()
+
+# Optional: bypass the mirror and use NRB directly.
+lc_download("cpi", source = "nrb", overwrite = TRUE)
+lc_update(source = "nrb")
 ```
 
 Raw sources are kept under `tools::R_user_dir("lcNRB", "cache")`, or the path
 in `options(lcNRB.cache_dir = ...)`. Different SHA-256 vintages are retained.
 `lc_clear_cache()` removes only this runtime cache.
 
+The `data-cache` branch is refreshed daily by GitHub Actions. The job downloads
+from NRB, validates every supported parser, verifies row and indicator counts,
+and publishes the original XLSX bytes by SHA-256 only if the entire run passes.
+If NRB is unavailable or a workbook layout changes, the workflow fails and the
+last validated mirror remains available. Set `options(lcNRB.source = "nrb")`
+to make direct NRB downloads the session default.
+
 ## Reliability and limitations
 
 - Workbook parsers verify sheet names, titles, headers, and expected layouts;
   structural changes cause explicit errors.
 - Discovery only follows HTTPS downloads on NRB-controlled domains.
+- Mirror downloads are restricted to `raw.githubusercontent.com`, checked
+  against the published SHA-256, and parsed locally; GitHub is a transport and
+  availability layer, not the stated data source.
 - Routine tests are offline. Optional source-integration tests use the audited
   workbooks or the live site when explicitly enabled.
 - A changed source file is parsed and validated before becoming the latest
@@ -97,7 +113,8 @@ in `options(lcNRB.cache_dir = ...)`. Different SHA-256 vintages are retained.
   Unverified files are discoverable but are never presented as standardized
   indicators.
 
-See [the source audit](docs/source-audit.md) for workbook-level findings.
+See [the source audit](https://github.com/koshishjlc72/lcNRB/blob/main/docs/source-audit.md)
+for workbook-level findings.
 
 ## Contributing
 
